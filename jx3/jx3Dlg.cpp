@@ -188,16 +188,19 @@ void CJx3Dlg::OnButton1()
 	si.dwFlags=STARTF_USESHOWWINDOW;
 	si.wShowWindow=SW_SHOW;
 	PROCESS_INFORMATION pi;
+	//必备参数设置结束
+	//创建进程 注入dll
 	::CreateProcess(NULL,"JX3CLIENT.exe DOTNOTSTARTGAMEBYJX3CLIENT.EXE",NULL,NULL,0,CREATE_SUSPENDED,NULL,NULL,&si,&pi);
 	char s[]=".\\jx3dll.dll";
 	int nSize = ::strlen(s)+1;
 	void *pParam=::VirtualAllocEx(pi.hProcess,0,nSize,MEM_COMMIT,PAGE_EXECUTE_READWRITE);
 	::WriteProcessMemory(pi.hProcess,pParam,s,nSize,0);
+	//创建远程线程
 	HANDLE hThread=::CreateRemoteThread(pi.hProcess,NULL,0,(LPTHREAD_START_ROUTINE)LoadLibraryA,pParam,0,NULL);
 	::WaitForSingleObject(hThread,INFINITE);
-	::CloseHandle(hThread);
+	::CloseHandle(hThread);//不适用句柄最好关掉
 	::VirtualFreeEx(pi.hProcess,pParam,nSize,MEM_DECOMMIT);
-	::ResumeThread(pi.hThread);
+	::ResumeThread(pi.hThread);//恢复线程，必须要，不然会卡住
 	MessageBox("结束启动");
 	return ;
 
